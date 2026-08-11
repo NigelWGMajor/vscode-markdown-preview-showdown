@@ -458,9 +458,21 @@
           }
         })
         .catch((err) => {
+          const message = err && (err.stack || err.message) ? err.stack || err.message : String(err);
           that.scripts = [];
           that.previewElement.innerHTML = '';
-          console.log(err);
+
+          const title = document.createElement('h2');
+          title.textContent = 'Markdown preview failed to render';
+          const details = document.createElement('pre');
+          details.textContent = message;
+          details.style.whiteSpace = 'pre-wrap';
+          details.style.wordBreak = 'break-word';
+          that.previewElement.appendChild(title);
+          that.previewElement.appendChild(details);
+
+          that.postMessage('renderError', [message]);
+          console.error(err);
         });
     }
 

@@ -11,7 +11,6 @@ let out: vscode.OutputChannel;
 function init() {
   if (!out) {
     out = vscode.window.createOutputChannel('MDPS Extension');
-    out.show();
   }
 }
 

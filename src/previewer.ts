@@ -240,6 +240,7 @@ export class ShowdownPreviewer {
               );
               break;
             case 'webviewLoaded':
+              output.log('Preview webview loaded.');
               this.updateCurrentView();
               break;
             case 'revealLine':
@@ -247,6 +248,9 @@ export class ShowdownPreviewer {
               break;
             case 'renderPlantuml':
               this.renderLocalPlantuml(message.args[0]);
+              break;
+            case 'renderError':
+              output.log(`Markdown preview failed to render: ${message.args[0]}`);
               break;
           }
         },
@@ -989,17 +993,30 @@ var scheme_dist = "${this.changeFileProtocol(webview, `node_modules/@jhuix/showd
 
 
   private async refreshPreview(previewPanel: vscode.WebviewPanel, uri: vscode.Uri) {
-    const editor = this.getEditor();
-    if (previewPanel && editor && editor.document && ShowdownPreviewer.isMarkdownFile(editor.document)) {
+    const editor = this.getEditor() || vscode.window.visibleTextEditors.find((visibleEditor) => {
+      return this.isSameUri(visibleEditor.document.uri) && ShowdownPreviewer.isMarkdownFile(visibleEditor.document);
+    });
+    if (editor && !this.editor) {
+      this.editor = editor;
+    }
+    let document = editor && editor.document;
+    if (!document) {
+      try {
+        document = await vscode.workspace.openTextDocument(uri);
+      } catch (err) {
+        output.log(`Unable to open the Markdown source for preview: ${err}`);
+      }
+    }
+    if (previewPanel && document && ShowdownPreviewer.isMarkdownFile(document)) {
       let initialLine = this.currentLine;
-      if (vscode.window.activeTextEditor && this.isSameUri(vscode.window.activeTextEditor.document.uri)) {
+      if (editor && vscode.window.activeTextEditor && this.isSameUri(vscode.window.activeTextEditor.document.uri)) {
         initialLine = editor.selections[0].active.line || 0;
         if (editor.visibleRanges.length) {
           const topLine = editor.visibleRanges[0].start.line;
           const bottomLine = editor.visibleRanges[0].end.line;
           if (topLine === 0) {
             initialLine = 0;
-          } else if (Math.floor(bottomLine) === editor.document.lineCount - 1) {
+          } else if (Math.floor(bottomLine) === document.lineCount - 1) {
             initialLine = bottomLine;
           } else {
             initialLine = Math.floor((topLine + bottomLine) / 2);
@@ -1007,9 +1024,11 @@ var scheme_dist = "${this.changeFileProtocol(webview, `node_modules/@jhuix/showd
         }
         this.currentLine = initialLine;
       }
-      const lines = editor.document.lineCount;
+      const lines = document.lineCount;
       const caption = path.basename(uri.fsPath, path.extname(uri.fsPath));
-      const text = editor.document.getText();
+      const text = document.getText();
+
+      output.log(`Rendering ${caption} (${text.length} characters).`);
 
       this.previewPostMessage({
         command: 'updateMarkdown',
@@ -1020,6 +1039,12 @@ var scheme_dist = "${this.changeFileProtocol(webview, `node_modules/@jhuix/showd
         currentLine: initialLine,
         markdown: text
       });
+    } else {
+      output.log(
+        `Preview update skipped (uri=${uri.toString()}, editor=${!!editor}, document=${!!document}, language=${
+          document ? document.languageId : 'unavailable'
+        }).`
+      );
     }
   }
   private revealLine(uri: string, line: number) {

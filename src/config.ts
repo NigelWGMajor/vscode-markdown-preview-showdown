@@ -55,7 +55,11 @@ export class PreviewConfig {
     if (typeof process.env.VSCODE_NLS_CONFIG === 'string') {
       const vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG);
       if (vscodeOptions.hasOwnProperty('locale') && vscodeOptions.locale) {
-        this.locale = vscodeOptions.locale.toLowerCase();
+        const locale = vscodeOptions.locale.toLowerCase();
+        // The extension currently ships English and Simplified Chinese strings only.
+        // Normalize regional English locales (for example, en-us) to the supported
+        // fallback so webview menu initialization never dereferences an unknown locale.
+        this.locale = locale === 'zh-cn' ? locale : 'en';
       }
     }
     if (context) {

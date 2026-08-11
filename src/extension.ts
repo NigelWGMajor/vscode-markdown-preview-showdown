@@ -13,14 +13,15 @@ export function activate(context: vscode.ExtensionContext) {
   const contentPreviewer = new ShowdownPreviewer(context);
 
   function openPreview(uri?: vscode.Uri) {
-    if (!vscode.window.activeTextEditor) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
       return;
     }
     if (!(uri instanceof vscode.Uri)) {
       // we are relaxed and don't check for markdown files
-      uri = vscode.window.activeTextEditor.document.uri;
+      uri = editor.document.uri;
     }
-    contentPreviewer.openPreview(uri, vscode.window.activeTextEditor, {
+    contentPreviewer.openPreview(uri, editor, {
       preserveFocus: true,
       viewColumn: vscode.ViewColumn.Two
     });

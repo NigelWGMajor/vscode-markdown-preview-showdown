@@ -74,6 +74,11 @@ This extension contributes the following settings:
 
     Custom font size of preview page, default "14" px.
 
+* `markdown-preview-showdown.darkMode`:
+
+    Use the dark color theme for preview and export, default false. Mermaid colors are controlled by the
+    `--nix-mermaid-*` variables in `media/nix.css` and can be overridden by custom CSS.
+
 * `markdown-preview-showdown.scrollSync`:
 
     Automatic scroll sync, default true, it is experimental.

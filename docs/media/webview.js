@@ -22,7 +22,7 @@
       menus.classList.add('context-menu-list');
       menus.style.top = '-50%';
       menus.style.display = 'none';
-      menus.style.zIndex = '1';
+      menus.style.zIndex = '2147483647';
       this.menus = menus;
       this.selector = selector ? selector : document;
       this.csstypes = {};
@@ -85,15 +85,10 @@
     }
 
     show(x, y) {
+      const edgePadding = 10;
       this.menus.style.display = 'block';
-      if (y + this.menus.clientHeight > window.innerHeight - 10) {
-        y -= this.menus.clientHeight + 10;
-      }
-      if (x + this.menus.clientWidth > window.innerWidth - 10) {
-        x -= this.menus.clientWidth + 10;
-      }
-      x += window.pageXOffset;
-      y += window.pageYOffset;
+      x = Math.max(edgePadding, Math.min(x, window.innerWidth - this.menus.clientWidth - edgePadding));
+      y = Math.max(edgePadding, Math.min(y, window.innerHeight - this.menus.clientHeight - edgePadding));
       this.menus.style.left = x + 'px';
       this.menus.style.top = y + 'px';
     }
@@ -134,6 +129,52 @@
       }
     }
     return localizedMenu[locale][key] ? localizedMenu[locale][key] : '';
+  }
+
+  function normalizeLocalFileLinks(markdown) {
+    if (typeof markdown !== 'string' || !uriPath) {
+      return markdown;
+    }
+
+    const decodePath = (value) => {
+      try {
+        return decodeURIComponent(value);
+      } catch {
+        return value;
+      }
+    };
+    const normalizePath = (value) => {
+      return decodePath(value)
+        .replace(/\\/g, '/')
+        .replace(/^\/([a-zA-Z]:\/)/, '$1')
+        .replace(/\/+$/, '');
+    };
+    const sourceDirectory = normalizePath(uriPath);
+    const isWindowsPath = /^[a-zA-Z]:\//.test(sourceDirectory);
+
+    return markdown.replace(/file:\/\/\/[^\s<>"')\]]+/gi, (value) => {
+      try {
+        const fileUrl = new URL(value);
+        const targetPath = normalizePath(fileUrl.pathname);
+        const separator = targetPath.lastIndexOf('/');
+        if (separator < 0) {
+          return value;
+        }
+
+        const targetDirectory = targetPath.substring(0, separator);
+        const pathsMatch = isWindowsPath
+          ? targetDirectory.toLowerCase() === sourceDirectory.toLowerCase()
+          : targetDirectory === sourceDirectory;
+        if (!pathsMatch) {
+          return value;
+        }
+
+        const fileName = targetPath.substring(separator + 1);
+        return `./${encodeURIComponent(fileName)}${fileUrl.search}${fileUrl.hash}`;
+      } catch {
+        return value;
+      }
+    });
   }
 
   class PreviewHtml {
@@ -208,7 +249,7 @@
       const that = this;
       const menuItems = {
         style: {
-          zIndex: '1',
+          zIndex: '2147483647',
           display: 'none'
         },
         items: [
@@ -468,6 +509,7 @@
     }
 
     updateMarkdown(markdown, options) {
+      markdown = normalizeLocalFileLinks(markdown);
       options = options || null;
       if (options instanceof Object) {
         this.config.options = options;

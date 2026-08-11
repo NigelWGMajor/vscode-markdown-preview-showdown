@@ -1,0 +1,259 @@
+:root,
+html[data-nix-theme='light'] {
+  color-scheme: light;
+  --nix-background: #f9f9f9;
+  --nix-foreground: #333;
+  --nix-surface: #fff;
+  --nix-surface-muted: #f5f5f5;
+  --nix-code-background: #f8f8f8;
+  --nix-border: #d6d6d6;
+  --nix-muted: #5c5c5c;
+  --nix-link: rgb(0, 122, 204);
+  --nix-link-hover: rgb(0, 137, 255);
+  --nix-scrollbar-track: rgb(241, 241, 241);
+  --nix-scrollbar-thumb: rgba(0, 0, 0, 0.25);
+  --nix-scrollbar-thumb-inactive: rgba(0, 0, 0, 0.15);
+  --nix-scrollbar-thumb-hover: rgba(128, 135, 139, 0.8);
+  --nix-mermaid-primary: #ececff;
+  --nix-mermaid-primary-text: #333;
+  --nix-mermaid-primary-border: #9370db;
+  --nix-mermaid-line: #333;
+  --nix-mermaid-secondary: #ffffde;
+  --nix-mermaid-tertiary: #f4f4f4;
+  --nix-mermaid-note: #fff5ad;
+}
+
+html[data-nix-theme='dark'] {
+  color-scheme: dark;
+  --nix-background: #1e1e1e;
+  --nix-foreground: #d4d4d4;
+  --nix-surface: #252526;
+  --nix-surface-muted: #2d2d30;
+  --nix-code-background: #2d2d30;
+  --nix-border: #454545;
+  --nix-muted: #a8a8a8;
+  --nix-link: #4daafc;
+  --nix-link-hover: #75beff;
+  --nix-scrollbar-track: #252526;
+  --nix-scrollbar-thumb: rgba(121, 121, 121, 0.45);
+  --nix-scrollbar-thumb-inactive: rgba(121, 121, 121, 0.3);
+  --nix-scrollbar-thumb-hover: rgba(170, 170, 170, 0.65);
+  --nix-mermaid-primary: #2d333b;
+  --nix-mermaid-primary-text: #e6edf3;
+  --nix-mermaid-primary-border: #58a6ff;
+  --nix-mermaid-line: #8b949e;
+  --nix-mermaid-secondary: #30363d;
+  --nix-mermaid-tertiary: #21262d;
+  --nix-mermaid-note: #4d4530;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+html {
+  font-size: var(--nix-font-size, 14px);
+  line-height: 1.6;
+  overflow: initial;
+  box-sizing: border-box;
+  word-wrap: break-word;
+}
+
+*,
+:after,
+:before {
+  box-sizing: inherit;
+}
+
+body {
+  color: var(--nix-foreground);
+  background: var(--nix-background);
+  min-height: 100%;
+  position: relative;
+  font-family: Helvetica Neue, NotoSansHans-Regular, AvenirNext-Regular, arial, Hiragino Sans GB, Microsoft Yahei,
+    WenQuanYi Micro Hei, Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  height: 100%;
+}
+
+a,
+.showdowns a {
+  color: var(--nix-link);
+}
+
+a:hover,
+a:focus,
+.showdowns a:hover,
+.showdowns a:focus {
+  color: var(--nix-link-hover);
+}
+
+code,
+.showdowns code {
+  background-color: var(--nix-code-background);
+  border-color: var(--nix-border);
+  color: var(--nix-foreground);
+}
+
+.showdowns {
+  color: var(--nix-foreground);
+}
+
+.showdowns h1,
+.showdowns h2,
+.showdowns hr,
+.showdowns pre,
+.showdowns blockquote {
+  border-color: var(--nix-border);
+}
+
+.showdowns h6,
+.showdowns .subheader,
+.showdowns blockquote,
+.showdowns blockquote cite,
+.showdowns blockquote cite a,
+.showdowns blockquote cite a:visited {
+  color: var(--nix-muted);
+}
+
+.showdowns pre code {
+  background-color: transparent;
+}
+
+.showdowns .codeblock-container .code-title,
+.showdowns .codeblock-container pre {
+  background-color: var(--nix-surface-muted);
+}
+
+.showdowns table {
+  background: var(--nix-surface);
+}
+
+.showdowns table caption,
+.showdowns table thead tr td,
+.showdowns table thead tr th,
+.showdowns table tfoot tr td,
+.showdowns table tfoot tr th,
+.showdowns table tr td,
+.showdowns table tr th {
+  color: var(--nix-foreground);
+}
+
+.showdowns table thead,
+.showdowns table tfoot,
+.showdowns table tr.alt,
+.showdowns table tr.even,
+.showdowns table tr:nth-of-type(2n) {
+  background: var(--nix-surface-muted);
+}
+
+.showdowns table thead tr td,
+.showdowns table thead tr th,
+.showdowns table tfoot tr td,
+.showdowns table tfoot tr th,
+.showdowns table tr td,
+.showdowns table tr th,
+.showdowns table tbody tr td,
+.showdowns table tbody tr th {
+  border-color: var(--nix-border);
+}
+
+.showdowns .mermaid svg {
+  background-color: transparent !important;
+}
+
+.showdowns .mermaid .node rect,
+.showdowns .mermaid .node circle,
+.showdowns .mermaid .node ellipse,
+.showdowns .mermaid .node polygon,
+.showdowns .mermaid .node path,
+.showdowns .mermaid .actor,
+.showdowns .mermaid .actor-top,
+.showdowns .mermaid .actor-bottom,
+.showdowns .mermaid .classGroup rect,
+.showdowns .mermaid .entityBox {
+  fill: var(--nix-mermaid-primary) !important;
+  stroke: var(--nix-mermaid-primary-border) !important;
+}
+
+.showdowns .mermaid text,
+.showdowns .mermaid tspan,
+.showdowns .mermaid .label,
+.showdowns .mermaid .nodeLabel,
+.showdowns .mermaid text.actor,
+.showdowns .mermaid .messageText,
+.showdowns .mermaid .loopText,
+.showdowns .mermaid .classText,
+.showdowns .mermaid .labelText {
+  color: var(--nix-mermaid-primary-text) !important;
+  fill: var(--nix-mermaid-primary-text) !important;
+}
+
+.showdowns .mermaid .edgePath .path,
+.showdowns .mermaid .flowchart-link,
+.showdowns .mermaid .messageLine0,
+.showdowns .mermaid .messageLine1,
+.showdowns .mermaid .relationshipLine,
+.showdowns .mermaid .transition {
+  stroke: var(--nix-mermaid-line) !important;
+}
+
+.showdowns .mermaid marker path,
+.showdowns .mermaid .arrowheadPath {
+  fill: var(--nix-mermaid-line) !important;
+  stroke: var(--nix-mermaid-line) !important;
+}
+
+.showdowns .mermaid .cluster rect,
+.showdowns .mermaid .labelBox,
+.showdowns .mermaid .stateGroup rect,
+.showdowns .mermaid .statediagram-cluster rect {
+  fill: var(--nix-mermaid-tertiary) !important;
+  stroke: var(--nix-mermaid-primary-border) !important;
+}
+
+.showdowns .mermaid .loopLine,
+.showdowns .mermaid .activation0,
+.showdowns .mermaid .activation1,
+.showdowns .mermaid .activation2 {
+  fill: var(--nix-mermaid-secondary) !important;
+  stroke: var(--nix-mermaid-primary-border) !important;
+}
+
+.showdowns .mermaid .note {
+  fill: var(--nix-mermaid-note) !important;
+  stroke: var(--nix-mermaid-primary-border) !important;
+}
+
+.workspace-container {
+  overflow: hidden;
+  margin: 8px 15px;
+}
+
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--nix-scrollbar-track);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb {
+  cursor: pointer;
+  border-radius: 5px;
+  background: var(--nix-scrollbar-thumb);
+  transition: color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+  background: var(--nix-scrollbar-thumb-inactive);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nix-scrollbar-thumb-hover);
+}

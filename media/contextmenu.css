@@ -3,7 +3,8 @@
  * Use of this source code is governed by a MIT license that can be found in the LICENSE file.
  */
 .context-menu-list {
-  position: absolute;
+  position: fixed;
+  z-index: 2147483647;
   display: inline-block;
   max-width: 26em;
   padding: 0.25em 0;
@@ -11,8 +12,10 @@
   font-family: inherit;
   font-size: inherit;
   list-style-type: none;
-  background: #fff;
-  border: 1px solid #bebebe;
+  color: var(--nix-foreground, #2f2f2f);
+  pointer-events: auto;
+  background: var(--nix-surface, #fff);
+  border: 1px solid var(--nix-border, #bebebe);
   border-radius: 0.2em;
   -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
@@ -21,30 +24,30 @@
 .context-menu-item {
   position: relative;
   padding: 0.2em 2em;
-  color: #2f2f2f;
+  color: var(--nix-foreground, #2f2f2f);
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  background-color: #fff;
+  background-color: var(--nix-surface, #fff);
 }
 
 .context-menu-separator {
   padding: 0;
   margin: 0.35em 0;
-  border-bottom: 1px solid #e6e6e6;
+  border-bottom: 1px solid var(--nix-border, #e6e6e6);
 }
 
 .context-menu-item:hover {
-  color: #fff;
+  color: var(--nix-surface, #fff);
   cursor: pointer;
-  background-color: #2980b9;
+  background-color: var(--nix-link, #2980b9);
 }
 
 .context-menu-item:disabled {
-  color: #bbb;
+  color: var(--nix-muted, #bbb);
   cursor: default;
-  background-color: #fff;
+  background-color: var(--nix-surface, #fff);
 }
 
 .context-menu-submenu:after {

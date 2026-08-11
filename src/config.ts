@@ -18,6 +18,7 @@ export class PreviewConfig {
   }
 
   public cssPath: string;
+  public darkMode: boolean;
   public locale: string;
   public autoPreview: boolean;
   public fontSize: number;
@@ -51,6 +52,7 @@ export class PreviewConfig {
     this.printBackground = false;
     this.locale = 'en';
     this.cssPath = '';
+    this.darkMode = false;
     // Get current localization id, default 'en'.
     if (typeof process.env.VSCODE_NLS_CONFIG === 'string') {
       const vscodeOptions = JSON.parse(process.env.VSCODE_NLS_CONFIG);
@@ -68,6 +70,7 @@ export class PreviewConfig {
 
       this.autoPreview = PreviewConfig.getData(config.get('autoPreview'), true);
       this.cssPath = PreviewConfig.getData(config.get('cssPath'), '');
+      this.darkMode = PreviewConfig.getData(config.get('darkMode'), false);
       this.scrollSync = PreviewConfig.getData(config.get('scrollSync'), true);
       this.fontSize = PreviewConfig.getData(config.get('fontSize'), Math.pow(8, 5));
       this.mermaidTheme = PreviewConfig.getData(config.get('mermaid.theme'), 'default');
@@ -151,6 +154,7 @@ export class PreviewConfig {
     } else {
       this.autoPreview = false;
       this.cssPath = '';
+      this.darkMode = false;
       this.fontSize = PreviewConfig.defaultFontSize;
       this.scrollSync = true;
       this.flavor = 'github';

@@ -316,6 +316,34 @@ export class ShowdownPreviewer {
   }
 
 
+  private resolveCustomCssPath(uri?: vscode.Uri) {
+    const configuredPath = this.config.cssPath.trim();
+    if (!configuredPath) {
+      return '';
+    }
+    if (path.isAbsolute(configuredPath)) {
+      return path.normalize(configuredPath);
+    }
+
+    const resourceRoot = uri
+      ? this.getProjectDirectoryPath(uri) || path.dirname(uri.fsPath)
+      : process.cwd();
+    return path.resolve(resourceRoot, configuredPath);
+  }
+
+  private async loadCustomCss(uri?: vscode.Uri) {
+    const cssPath = this.resolveCustomCssPath(uri);
+    if (!cssPath) {
+      return '';
+    }
+    try {
+      return await utils.readFile(cssPath, { encoding: 'utf-8' });
+    } catch (error) {
+      output.log(`Unable to load custom CSS from ${cssPath}: ${error}`);
+      return '';
+    }
+  }
+
   public async saveLocalHtml(
     htmlPath: string,
     doc: { type: string; content: string } | string,
@@ -327,7 +355,8 @@ export class ShowdownPreviewer {
       id: string|undefined|null;
       code: string|undefined|null;
       inner: [innerScript]|innerScript|undefined|null
-    }]
+    }],
+    sourceUri?: vscode.Uri
   ) {
     if (!title) {
       title = 'Preview Markdown File';
@@ -354,6 +383,9 @@ export class ShowdownPreviewer {
         encoding: 'utf-8'
       }
     );
+    const nixcss = await utils.readFile(path.join(this.context.extensionPath, 'media/nix.css'), {
+      encoding: 'utf-8'
+    });
 
     let abcStyle = '';
     let katexStyle = '';
@@ -413,16 +445,8 @@ export class ShowdownPreviewer {
       }
     }
 
-    let otherStyles = '';
-    // Include custom CSS from cssPath if specified and file exists
-    if (this.config.cssPath) {
-      try {
-        const customCss = await utils.readFile(this.config.cssPath, { encoding: 'utf-8' });
-        otherStyles += `<style type="text/css">${customCss}</style>`;
-      } catch (e) {
-        // Ignore if file not found or error reading
-      }
-    }
+    const customCss = await this.loadCustomCss(sourceUri);
+    let otherStyles = customCss ? `<style type="text/css">${customCss}</style>` : '';
     if (styles.length > 0) {
       for (let item of styles) {
         otherStyles = otherStyles + item;
@@ -447,78 +471,16 @@ export class ShowdownPreviewer {
     }
 
     const html = `<!DOCTYPE html>
-    <html>
+    <html data-nix-theme="${this.config.darkMode ? 'dark' : 'light'}" style="--nix-font-size: ${
+      this.config.fontSize
+    }px;">
     <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${title}</title>
-    <style type="text/css">
-    * {
-      margin: 0;
-      padding: 0;
-      border: none;
-    }
-    html {
-      font-size: ${this.config.fontSize}px;
-      line-height: 1.6;
-      overflow: initial;
-      box-sizing: border-box;
-      word-wrap: break-word;
-    }
-    *,
-    :after,
-    :before {
-      box-sizing: inherit;
-    }
-    body {
-      color: #333;
-      background: #f9f9f9;
-      min-height: 100%;
-      position: relative;
-      font-family: Helvetica Neue, NotoSansHans-Regular, AvenirNext-Regular, arial, Hiragino Sans GB, Microsoft Yahei, WenQuanYi Micro Hei, Arial, Helvetica, sans-serif;
-      -webkit-font-smoothing: antialiased;
-      height: 100%;
-    }
-    a {
-      color: rgb(0, 122, 204);
-    }
-    a:hover,
-    a:focus {
-      color: rgb(0, 137, 255);
-    }
-    code {
-      background-color: #f8f8f8;
-      border-color: #dfdfdf;
-      color: #333;
-    }
-    .workspace-container {
-      overflow: hidden;
-      margin: 8px 15px 8px 15px;
-    }
-    ::-webkit-scrollbar {
-      -webkit-appearance: none;
-      width: 10px;
-      height: 10px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgb(241, 241, 241);
-      border-radius: 0;
-    }
-    ::-webkit-scrollbar-thumb {
-      cursor: pointer;
-      border-radius: 5px;
-      background: rgba(0, 0, 0, 0.25);
-      transition: color 0.2s ease;
-    }
-    ::-webkit-scrollbar-thumb:window-inactive {
-      background: rgba(0, 0, 0, 0.15);
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(128, 135, 139, 0.8);
-    }
-    </style>
-    <style type="text/css">${showdowncss}</style>${abcStyle}${katexStyle}${railroadStyle}${sequencesStyle}${otherStyles}
+    <style type="text/css">${showdowncss}</style>
+    <style type="text/css">${nixcss}</style>${abcStyle}${katexStyle}${railroadStyle}${sequencesStyle}${otherStyles}
     ${scriptElements}
     </head>
     <body>
@@ -545,16 +507,17 @@ export class ShowdownPreviewer {
     }]
   ) {
     let dest = '';
+    let sourceUri: vscode.Uri | undefined;
     if (uri) {
-      const srcUri = vscode.Uri.parse(uri);
-      dest = srcUri.fsPath;
+      sourceUri = vscode.Uri.parse(uri);
+      dest = sourceUri.fsPath;
       const fsHash = crypto.createHash('md5');
       fsHash.update(dest);
       dest = path.join(path.resolve(os.tmpdir()), `mdsp-${fsHash.digest('hex')}.html`);
     } else {
       dest = path.join(path.resolve(os.tmpdir()), `mdsp-temp.html`);
     }
-    await this.saveLocalHtml(dest, doc, title, csstypes, styles, scripts);
+    await this.saveLocalHtml(dest, doc, title, csstypes, styles, scripts, sourceUri);
 
     const actionItem = localize(this.config.locale, 'msg.exploredir');
     vscode.window
@@ -585,7 +548,7 @@ export class ShowdownPreviewer {
       let dest = srcUri.fsPath;
       const extname = path.extname(dest);
       dest = dest.replace(new RegExp(extname + '$'), '.html');
-      await this.saveLocalHtml(dest, doc, title, csstypes, styles, scripts);
+      await this.saveLocalHtml(dest, doc, title, csstypes, styles, scripts, srcUri);
       const actionItem = localize(this.config.locale, 'msg.exploredir');
       vscode.window
         .showInformationMessage(localize(this.config.locale, 'msg.createdfile', path.basename(dest), dest), actionItem)
@@ -619,7 +582,7 @@ export class ShowdownPreviewer {
     const fsHash = crypto.createHash('md5');
     fsHash.update(dest);
     const htmlPath = path.join(path.resolve(os.tmpdir()), `mdsp-${fsHash.digest('hex')}.html`);
-    await this.saveLocalHtml(htmlPath, doc, title, csstypes, styles, scripts);
+    await this.saveLocalHtml(htmlPath, doc, title, csstypes, styles, scripts, srcUri);
 
     const extname = path.extname(dest);
     dest = dest.replace(new RegExp(extname + '$'), `.${fileType}`);
@@ -745,8 +708,17 @@ export class ShowdownPreviewer {
   public updateConfiguration() {
     const newConfig = PreviewConfig.getCurrentConfig(this.context);
     if (!this.config.isEqualTo(newConfig)) {
+      const reloadTemplate =
+        this.config.cssPath !== newConfig.cssPath ||
+        this.config.darkMode !== newConfig.darkMode ||
+        this.config.fontSize !== newConfig.fontSize ||
+        this.config.locale !== newConfig.locale;
       this.config = newConfig;
-      this.updateCurrentView();
+      if (reloadTemplate && this.webpanel && this.uri) {
+        this.generateHTML();
+      } else {
+        this.updateCurrentView();
+      }
     }
   }
   public isFirstPreview() {
@@ -850,42 +822,25 @@ export class ShowdownPreviewer {
       langMeta = `<meta http-equiv="Content-Language" content="${this.config.locale}">`;
     }
 
-    let customCss = '';
-    if (this.config.cssPath) {
-      try {
-        customCss = await utils.readFile(this.config.cssPath, { encoding: 'utf-8' });
-      } catch (e) {
-        // File not found or error reading, ignore or handle as needed
-        customCss = '';
-      }
-    }
+    const customCss = await this.loadCustomCss(uri);
 
     webview.html = `<!DOCTYPE html>
-<html>
+<html data-nix-theme="${this.config.darkMode ? 'dark' : 'light'}" style="--nix-font-size: ${
+      this.config.fontSize
+    }px;">
 <head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">${langMeta}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
-<style type="text/css">
-  body {
-    font-size: ${this.config.fontSize}px;
-    line-height: 1.6;
-  }
-  a {
-    color: #569cd6;
-  }
-  a:hover {
-    color: #00a3f5;
-  }
-</style>
 <link rel="stylesheet" href="${this.changeFileProtocol(
       webview,
       `node_modules/@jhuix/showdowns/dist/showdowns.min.css`,
       true
     )}">
-<link rel="stylesheet" href="${this.changeFileProtocol(webview, `media/contextmenu.css`, true)}">
+<link rel="stylesheet" href="${this.changeFileProtocol(webview, `media/nix.css`, true)}">
 <style type="text/css">${customCss}</style>
+<link rel="stylesheet" href="${this.changeFileProtocol(webview, `media/contextmenu.css`, true)}">
 </head>
 <body>
 <script>
@@ -940,9 +895,10 @@ var scheme_dist = "${this.changeFileProtocol(webview, `node_modules/@jhuix/showd
       katex: {},
       vega: {}
     };
-    // Showdown 3's safe mode contains the upstream XSS/ReDoS hardening. Keep it
-    // enabled even when a workspace supplies its own markdown options.
-    Object.assign(options.markdown, this.config.markdownOptions, { safeMode: true });
+    // Tables are a core preview feature and should not silently stop rendering
+    // when a flavor without table support is selected. Keep the default
+    // overridable through markdown.options, while always enforcing safe mode.
+    Object.assign(options.markdown, { tables: true }, this.config.markdownOptions, { safeMode: true });
     Object.assign(options.plantuml, {
       renderMode: this.config.plantumlRenderMode,
       umlWebSite: this.config.plantumlWebsite

@@ -1,0 +1,8 @@
+{
+  "name": "showdown",
+  "version": "3.0.0-rc2",
+  "description": "Security-patched Showdown release candidate built from upstream commit e5cab1e.",
+  "main": "./dist/showdown.js",
+  "module": "./dist/showdown.esm.js",
+  "license": "MIT"
+}

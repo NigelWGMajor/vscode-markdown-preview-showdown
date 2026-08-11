@@ -940,7 +940,9 @@ var scheme_dist = "${this.changeFileProtocol(webview, `node_modules/@jhuix/showd
       katex: {},
       vega: {}
     };
-    Object.assign(options.markdown, this.config.markdownOptions);
+    // Showdown 3's safe mode contains the upstream XSS/ReDoS hardening. Keep it
+    // enabled even when a workspace supplies its own markdown options.
+    Object.assign(options.markdown, this.config.markdownOptions, { safeMode: true });
     Object.assign(options.plantuml, {
       renderMode: this.config.plantumlRenderMode,
       umlWebSite: this.config.plantumlWebsite

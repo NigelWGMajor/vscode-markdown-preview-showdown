@@ -3,6 +3,7 @@
 out/test/**
 src/**
 docs/**
+vendor/**
 .gitignore
 .prettierrc
 .prettierignore

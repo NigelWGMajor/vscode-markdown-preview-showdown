@@ -235,7 +235,7 @@
                 that.sourceUri,
                 that.csstypes,
                 styles,
-                that.scripts
+                that.getExportScripts()
               ]);
             }
           },
@@ -262,7 +262,7 @@
                 that.sourceUri,
                 that.csstypes,
                 styles,
-                that.scripts
+                that.getExportScripts()
               ]);
             }
           },
@@ -289,7 +289,7 @@
                 that.sourceUri,
                 that.csstypes,
                 styles,
-                that.scripts
+                that.getExportScripts()
               ]);
             }
           },
@@ -316,7 +316,7 @@
                 that.sourceUri,
                 that.csstypes,
                 styles,
-                that.scripts
+                that.getExportScripts()
               ]);
             }
           },
@@ -343,7 +343,7 @@
                 that.sourceUri,
                 that.csstypes,
                 styles,
-                that.scripts
+                that.getExportScripts()
               ]);
             }
           }
@@ -351,6 +351,36 @@
       };
 
       this.contextMenu = new ContextMenu(this.previewElement, menuItems);
+    }
+
+    getExportScripts() {
+      // Renderer metadata can contain runtime functions (for example, Mermaid).
+      // VS Code webview messages accept structured-cloneable data only.
+      const seen = new WeakSet();
+      try {
+        const serialized = JSON.stringify(this.scripts, function (key, value) {
+          if (typeof value === 'function' || typeof value === 'symbol') {
+            return undefined;
+          }
+          if (typeof value === 'bigint') {
+            return value.toString();
+          }
+          if (value && typeof value === 'object') {
+            if (typeof Node !== 'undefined' && value instanceof Node) {
+              return undefined;
+            }
+            if (seen.has(value)) {
+              return undefined;
+            }
+            seen.add(value);
+          }
+          return value;
+        });
+        return serialized ? JSON.parse(serialized) : [];
+      } catch (err) {
+        console.error('Unable to prepare preview scripts for export.', err);
+        return [];
+      }
     }
 
     changeFileProtocol(html) {
